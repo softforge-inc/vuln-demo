@@ -1,0 +1,52 @@
+// build.gradle  (INTENTIONALLY VULNERABLE EXAMPLE)
+buildscript {
+    repositories {
+        jcenter()
+        maven { url "http://insecure-repo.example.local/maven" }
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:1.5.22.RELEASE"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'application'
+apply plugin: 'org.springframework.boot'
+
+group = 'com.example.vuln'
+version = '0.0.1-SNAPSHOT'
+mainClassName = 'com.example.App'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    jcenter()
+    mavenCentral()
+    maven { url "http://insecure-artifacts.local/repo" }
+}
+
+configurations.all {
+    resolutionStrategy {
+        force 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
+    }
+}
+
+dependencies {
+    compile 'org.apache.logging.log4j:log4j-core:2.14.0'
+    compile 'commons-collections:commons-collections:3.2.1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.9.9.3'
+    compile 'org.apache.httpcomponents:httpclient:4.3'
+    compile 'org.springframework.boot:spring-boot-starter-web:1.5.22.RELEASE'
+    compile 'com.some.library:some-artifact:2.+'
+    testCompile 'junit:junit:4.10'
+}
+
+task printDeps {
+    doLast {
+        println "Dependency tree (intentionally includes outdated/vulnerable libs):"
+        configurations.compile.resolvedConfiguration.resolvedArtifacts.each {
+            println " - ${it.moduleVersion.id}"
+        }
+    }
+}
